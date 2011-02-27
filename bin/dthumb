@@ -1,0 +1,116 @@
+#!/usr/bin/perl
+# Copyright © 2009,2010 by Daniel Friesel <derf@derf.homelinux.org>
+# License: WTFPL <http://sam.zoy.org/wtfpl>
+use strict;
+use warnings;
+use autodie;
+
+use App::Dthumb;
+use Getopt::Long qw(:config no_ignore_case);
+
+my $opt = {};
+
+GetOptions(
+	$opt,
+	qw{
+		help|h
+		size|d=i
+		spacing|s=f
+		no-names|n
+		quality|q=i
+		version|v
+	},
+) or die("Please see perldoc -F $0\n");
+
+my $dthumb = App::Dthumb->new($opt);
+
+$dthumb->run();
+
+__END__
+
+=head1 NAME
+
+dthumb - Generate Thumbnails + Index for a set of images
+
+=head1 SYNOPSIS
+
+B<dthumb> [I<options>]
+
+=head1 DESCRIPTION
+
+dthumb will create an F<index.xhtml> with a list (thumbnails) of
+all images found in the current directory; the thumbnails will link to the
+images.
+
+Note that recursion is not yet supported.
+
+=head1 OPTIONS
+
+=over
+
+=item B<-n>, B<--no-names>
+
+Do not show image names below thumbnails
+
+=item B<-d>, B<--size> I<pixels>
+
+Maximum thumbnail size (either width or height).  Defaults to 200
+
+=item B<-s>, B<--spacing> I<float>
+
+Use I<float> as spacing factor.
+The size of each image element (image + possible border around it) is the
+number of pixels (see --size) times I<float>.
+So for B<1.1> you have a small border around each image, for B<1.0> you have
+no border at all, etc.
+
+=item B<-q>, B<--quality> I<int>
+
+Set thumbnail quality.
+Accepts values between 0 and 100, where 100 is the highest possible quality
+
+=back
+
+=head1 EXIT STATUS
+
+Zero upon success, non-zero otherwise.
+
+=head1 CONFIGURATION
+
+None.
+
+=head1 FILES
+
+B<dthumb> always works in the current working directory.  It will create the
+file F<index.xhtml>, in which the HTML code for the thumbnail list is saved.
+
+It also creates two directories: F<.thumbs> for the thumbnail images, and
+F<.dthumb>, which contains various data (so far icons and javascript code).
+
+=head1 DEPENDENCIES
+
+=over
+
+=item * autodie (Included in core as of perl 5.10.1)
+
+=item * Data::Section
+
+=item * Image::Imlib2
+
+=back
+
+=head1 BUGS AND LIMITATIONS
+
+Thumbnails of changed images are not yet recreated.
+
+=head1 AUTHOR
+
+Copyright (C) 2009, 2010 by Daniel Friesel E<lt>derf@chaosdorf.deE<gt>
+
+The lightbox code is (C) by Lokesh Dhakar
+E<lt>http://huddletogether.com/projects/lightbox/E<gt>, licensed under
+CC-BY-2.5
+
+=head1 LICENSE
+
+    0. You just DO WHAT THE FUCK YOU WANT TO

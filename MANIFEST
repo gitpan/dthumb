@@ -1,0 +1,19 @@
+bin/dthumb
+Build.PL
+Changelog
+lib/App/Dthumb.pm
+lib/App/Dthumb/Data.pm
+lib/App/Dthumb/Data.pm.PL
+MANIFEST			This list of files
+MANIFEST.SKIP
+README
+share/close.gif
+share/html_end
+share/html_start
+share/lightbox.js
+share/loading.gif
+share/overlay.png
+t/00-compile-pm.t
+t/01-compile-pl.t
+t/10-pod.t
+META.yml
