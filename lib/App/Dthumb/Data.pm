@@ -1,5 +1,32 @@
 package App::Dthumb::Data;
 
+
+=head1 NAME
+
+App::Dthumb::Data - Retrieve installed data (like lightbox images)
+
+=head1 SYNOPSIS
+
+    use App::Dthumb::Data;
+    my $data = App::Dthumb::Data->new();
+    
+    $data->set_vars(
+    	title => 'Something funky',
+    );
+    
+    print $data->get('html_start.dthumb');
+    
+    open(my $fh, '>', 'close.png');
+    print {$fh} $data->get('close.png');
+    close($fh);
+
+=head1 VERSION
+
+This manual documents B<App::Dthumb::Data> version 0.2
+
+=cut
+
+
 use strict;
 use warnings;
 use base 'Exporter';
@@ -8,12 +35,60 @@ use Data::Section -setup;
 use MIME::Base64 qw(decode_base64);
 
 our @EXPORT_OK = ();
+our $VERSION = '0.2';
+
+
+=head1 METHODS
+
+=head2 new
+
+Returns a new B<App::Dthumb> object. Does not take any arguments.
+
+=cut
+
 
 sub new {
 	my ($obj) = @_;
 	my $ref = {};
 	return bless($ref, $obj);
 }
+
+
+=head2 set_vars(%vars)
+
+Set replacement variables.  For each hash key, when outputting data using the
+B<get> function, dthumb will replace occurences of "<!-- $key -->" or "/* $key
+*/" (the dollar sign is literal) with its value.
+
+=cut
+
+
+sub set_vars {
+	my ($self, %vars) = @_;
+	$self->{replace} = \%vars;
+}
+
+
+=head2 list_archived
+
+Returns an array of all saved data.  That is, all files which do not end in
+".dthumb".
+
+=cut
+
+
+sub list_archived {
+	my ($self) = @_;
+	return grep { ! /\.dthumb$/ } $self->section_data_names();
+}
+
+
+=head2 get($filename)
+
+Returns the exact content of share/$filename.
+
+=cut
+
 
 sub get {
 	my ($self, $name) = @_;
@@ -23,77 +98,103 @@ sub get {
 		die("No such data: ${name}\n");
 	}
 
+	$data = ${$data};
+
+	chomp($data);
+
 	if ($name =~ qr{ \. (png | gif) $ }ox) {
-		return decode_base64(${$data});
+		return decode_base64($data);
 	}
-	return ${$data};
+
+	while (my ($key, $value) = each %{$self->{replace}}) {
+		$data =~ s{
+			( \<\!-- | /\* )
+				\s+ \$ $key \s+
+			( --\> | \*/ )
+		}{$value}gx;
+	}
+
+	return $data;
 }
 
 1;
 
+=head1 DEPENDENCIES
+
+=over
+
+=item * Data::Section
+
+=back
+
+=head1 AUTHOR
+
+Copyright (C) 2011 by Daniel Friesel E<lt>derf@chaosdorf.deE<gt>
+
+=head1 LICENSE
+
+    0. You just DO WHAT THE FUCK YOU WANT TO.
+
+=cut
+
 __DATA__
 
-______[ close.gif ]______
-R0lGODlhFAAUAJEDAJeXl0BAQO7u7vr69SH5BAEAAAMALAAAAAAUABQAAAI+nI+py+0PYxO02puu
-trmCcAUA1VHBWZ2gUJqoWrUuHCMbXR+aiuZG+OqxbCkhrfUJjYa6zUbmJEGdiygHUQAAOw==
-
-______[ html_end ]______
-</div>
-</body>
-</html>
-
-______[ html_start ]______
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
-	"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
-<head>
-	<title>dthumb</title>
-	<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
-	<script type="text/javascript" src=".dthumb/lightbox.js"></script>
-	<style type="text/css">
-
-#lightbox {
+______[ lightbox.css ]______
+#lightbox{
 	background-color:#eee;
 	padding: 10px;
 	border-bottom: 2px solid #666;
 	border-right: 2px solid #666;
-}
-
-#lightboxDetails {
+	}
+#lightboxDetails{
 	font-size: 0.8em;
 	padding-top: 0.4em;
-}
+	}	
+#lightboxCaption{ float: left; }
+#keyboardMsg{ float: right; }
+#closeButton{ top: 5px; right: 5px; }
 
-#lightboxCaption {
-	float: left;
-}
+#lightbox img{ border: none; clear: both;} 
+#overlay img{ border: none; }
 
-#keyboardMsg {
-	float: right;
-}
+#overlay{ background-image: url(overlay.png); }
 
-#closeButton {
-	top: 5px;
-	right: 5px;
-}
-
-#lightbox img {
-	border: none;
-	clear: both;
-}
-
-#overlay img {
-	border: none;
-}
-
-#overlay {
-	color: transparent;
-	background-image: url(.dthumb/overlay.png);
-}
-
-	</style>
+* html #overlay{
+	background-color: #333;
+	back\ground-color: transparent;
+	background-image: url(blank.gif);
+	filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src="overlay.png", sizingMethod="scale");
+	}
+	
+______[ html_start.dthumb ]______
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+	"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title><!-- $title --></title>
+	<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+	<link rel="stylesheet" type="text/css" href=".dthumb/main.css"/>
+	<link rel="stylesheet" type="text/css" href=".dthumb/lightbox.css"/>
+	<script type="text/javascript" src=".dthumb/lightbox.js"></script>
 </head>
 <body><div>
+
+______[ main.css ]______
+div.image-container {
+	text-align: center;
+	font-size: 80%;
+	float: left;
+	width: /* $width */;
+	height: /* $height */;
+}
+
+div.image-container a {
+	text-decoration: none;
+}
+
+______[ close.gif ]______
+R0lGODlhFAAUAJEDAJeXl0BAQO7u7vr69SH5BAEAAAMALAAAAAAUABQAAAI+nI+py+0PYxO02puu
+trmCcAUA1VHBWZ2gUJqoWrUuHCMbXR+aiuZG+OqxbCkhrfUJjYa6zUbmJEGdiygHUQAAOw==
 
 ______[ loading.gif ]______
 R0lGODlhfgAWANUiAFJSUi4uLjAwMElJSVBQUE9PT0xMTEhISCwsLDU1NUFBQUtLSy8vL0VFRUZG
@@ -577,6 +678,11 @@ function addLoadEvent(func)
 
 
 addLoadEvent(initLightbox);	// run initLightbox onLoad
+
+______[ html_end.dthumb ]______
+</div>
+</body>
+</html>
 
 ______[ overlay.png ]______
 iVBORw0KGgoAAAANSUhEUgAAAGUAAABlCAYAAABUfC3PAAAABGdBTUEAAK/INwWK6QAAABl0RVh0

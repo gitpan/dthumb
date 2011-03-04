@@ -14,6 +14,9 @@ my $build = Module::Build->new(
 	dist_name => 'dthumb',
 	module_name => 'App::Dthumb',
 	license => 'unrestricted',
+	PL_files => {
+		'lib/App/Dthumb/Data.pm.PL' => 'lib/App/Dthumb/Data.pm',
+	},
 	requires => {
 		'perl' => '5.10.0',
 		'autodie' => 0,
@@ -21,7 +24,10 @@ my $build = Module::Build->new(
 		'Data::Section' => 0,
 		'Getopt::Long' => 0,
 		'Image::Imlib2' => 0,
+		'IO::Handle' => 0,
 		'MIME::Base64' => 0,
+		'Time::Progress' => 0,
 	},
+	sign => 1,
 );
 $build->create_build_script();
